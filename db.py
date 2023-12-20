@@ -4,7 +4,7 @@ from datetime import datetime
 import uuid
 from boto3.dynamodb.conditions import Key
 
-dynamodb = boto3.resource('dynamodb', region_name='us-east-1', endpoint_url="http://localhost:8000")
+dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
 table = dynamodb.Table('Tasks')
 
 
@@ -12,6 +12,7 @@ def get_tasks():
     response = table.scan()
     items = response.get('Items', [])
     return items
+
 
 def get_task_by_id(task_id):
     response = table.query(KeyConditionExpression=Key('id').eq(task_id))
@@ -22,7 +23,8 @@ def get_task_by_id(task_id):
 def create_task(title, label):
     task_id = str(uuid.uuid4())
     created_at = datetime.now().isoformat()
-    table.put_item(Item={'id': task_id, 'title': title, 'label': label, 'created_at': created_at})
+    table.put_item(Item={'id': task_id, 'title': title,
+                   'label': label, 'created_at': created_at})
     return {'id': task_id, 'title': title, 'label': label, 'created_at': created_at}
 
 
@@ -39,5 +41,6 @@ def edit_task(task_id, title, label):
 
 def delete_task(task_id):
     task = get_task_by_id(task_id)
-    response = table.delete_item(Key={'id': task_id, "created_at": task["created_at"]})
+    response = table.delete_item(
+        Key={'id': task_id, "created_at": task["created_at"]})
     return response.get('ResponseMetadata', {}).get('HTTPStatusCode') == 200
