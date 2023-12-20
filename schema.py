@@ -9,6 +9,7 @@ class Task(graphene.ObjectType):
     id = graphene.String()
     title = graphene.String()
     label = graphene.String()
+    priority = graphene.Int()
     created_at = graphene.String()
 
 
@@ -17,11 +18,11 @@ class Query(graphene.ObjectType):
     labels = graphene.List(graphene.String)
 
     def resolve_tasks(self, info):
-        items = db.get_tasks()
+        # items = db.get_tasks()
+        items = db.get_tasks_sorted_by_priority()
         return [Task(id=item['id'], title=item['title'], label=item['label'], created_at=item['created_at']) for item in items]
 
     def resolve_labels(self, info):
-        items = db.get_tasks()
         return ["to-do", "in-progress", "review", "done"]
 
 
@@ -62,10 +63,23 @@ class DeleteTask(graphene.Mutation):
         return DeleteTask(success=success)
 
 
+class ReorderTask(graphene.Mutation):
+    class Arguments:
+        taskId = graphene.String()
+        priority = graphene.Int()
+
+    success = graphene.Boolean()
+
+    def mutate(self, info, taskId, priority):
+        success = db.reorder_task(taskId, priority)
+        return ReorderTask(success=success)
+
+
 class Mutation(graphene.ObjectType):
     create_task = CreateTask.Field()
     edit_task = EditTask.Field()
     delete_task = DeleteTask.Field()
+    reorder_task = ReorderTask.Field()
 
 
 schema = graphene.Schema(query=Query, mutation=Mutation)
