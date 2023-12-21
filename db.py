@@ -17,7 +17,6 @@ def get_tasks(board_id):
         KeyConditionExpression=Key('board_id').eq(board_id),
         ScanIndexForward=False
     )
-    print("getting tasks", response, board_id)
     items = response.get('Items', [])
     return items
 
@@ -103,7 +102,6 @@ def reorder_task(board_id, id, new_priority):
             KeyConditionExpression=key_condition
         )['Items']
 
-        print(tasks_to_update)
         # this is somewhat inefficient but we can assume that we have a limit of tasks on each board
         for task in tasks_to_update:
             if new_priority < old_priority:

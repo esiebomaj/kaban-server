@@ -16,12 +16,11 @@ class Task(graphene.ObjectType):
 
 class Query(graphene.ObjectType):
     tasks = graphene.List(Task, board_id=graphene.String(),
-                          filter_by=graphene.String())
+                          sort_by=graphene.String())
     labels = graphene.List(graphene.String)
 
-    def resolve_tasks(self, info, board_id, filter_by="priority"):
-        print(filter_by)
-        if filter_by == "priority":
+    def resolve_tasks(self, info, board_id, sort_by="priority"):
+        if sort_by == "priority":
             items = db.get_tasks_sorted_by_priority(board_id)
         else:
             items = db.get_tasks(board_id)
