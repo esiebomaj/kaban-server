@@ -5,7 +5,7 @@ import uuid
 from boto3.dynamodb.conditions import Key, Attr
 
 dynamodb = boto3.resource(
-    'dynamodb', region_name='us-east-1')
+    'dynamodb', region_name='us-east-1', endpoint_url="http://localhost:8000")
 table = dynamodb.Table('Tasks')
 PRIORITY_GSI = "PriorityIndex"
 CREATED_AT_GSI = "CreatedAtIndex"
