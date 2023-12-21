@@ -11,16 +11,22 @@ class Task(graphene.ObjectType):
     label = graphene.String()
     priority = graphene.Int()
     created_at = graphene.String()
+    board_id = graphene.String()
 
 
 class Query(graphene.ObjectType):
-    tasks = graphene.List(Task)
+    tasks = graphene.List(Task, board_id=graphene.String(),
+                          filter_by=graphene.String())
     labels = graphene.List(graphene.String)
 
-    def resolve_tasks(self, info):
-        # items = db.get_tasks()
-        items = db.get_tasks_sorted_by_priority()
-        return [Task(id=item['id'], title=item['title'], label=item['label'], created_at=item['created_at']) for item in items]
+    def resolve_tasks(self, info, board_id, filter_by="priority"):
+        print(filter_by)
+        if filter_by == "priority":
+            items = db.get_tasks_sorted_by_priority(board_id)
+        else:
+            items = db.get_tasks(board_id)
+
+        return [Task(**item) for item in items]
 
     def resolve_labels(self, info):
         return ["to-do", "in-progress", "review", "done"]
@@ -28,50 +34,54 @@ class Query(graphene.ObjectType):
 
 class CreateTask(graphene.Mutation):
     class Arguments:
+        board_id = graphene.String()
         title = graphene.String()
         label = graphene.String()
 
     task = graphene.Field(Task)
 
-    def mutate(self, info, title, label):
-        task_data = db.create_task(title, label)
+    def mutate(self, info, board_id, title, label):
+        task_data = db.create_task(board_id, title, label)
         return CreateTask(task=Task(**task_data))
 
 
 class EditTask(graphene.Mutation):
     class Arguments:
-        taskId = graphene.String()
+        board_id = graphene.String()
+        task_id = graphene.String()
         title = graphene.String()
         label = graphene.String()
         created_at = graphene.String()
 
     task = graphene.Field(Task)
 
-    def mutate(self, info, taskId, title, label):
-        task = db.edit_task(taskId, title, label)
+    def mutate(self, info, board_id, task_id, title, label):
+        task = db.edit_task(board_id, task_id, title, label)
         return EditTask(task=Task(**task))
 
 
 class DeleteTask(graphene.Mutation):
     class Arguments:
+        boardId = graphene.String()
         taskId = graphene.String()
 
     success = graphene.Boolean()
 
-    def mutate(self, info, taskId):
-        success = db.delete_task(taskId)
+    def mutate(self, info, boardId, taskId):
+        success = db.delete_task(boardId, taskId)
         return DeleteTask(success=success)
 
 
 class ReorderTask(graphene.Mutation):
     class Arguments:
-        taskId = graphene.String()
+        board_id = graphene.String()
+        task_id = graphene.String()
         priority = graphene.Int()
 
     success = graphene.Boolean()
 
-    def mutate(self, info, taskId, priority):
-        success = db.reorder_task(taskId, priority)
+    def mutate(self, info, board_id, task_id, priority):
+        success = db.reorder_task(board_id, task_id, priority)
         return ReorderTask(success=success)
 
 
